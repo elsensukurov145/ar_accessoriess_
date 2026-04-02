@@ -1,0 +1,16 @@
+{
+  "name": "pern-stack",
+  "version": "1.0.0",
+  "description": "Full PERN stack application",
+  "main": "index.js",
+  "scripts": {
+    "client": "npm run dev --prefix client",
+    "server": "npm run dev --prefix server",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "db:init": "npm run init-db --prefix server",
+    "postinstall": "npm install --prefix client && npm install --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
