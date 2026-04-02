@@ -1,64 +1,57 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Validate that required environment variables are set
-const requiredVars = ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME'];
-const missingVars = requiredVars.filter(v => !process.env[v]);
+/**
+ * DATABASE CONFIGURATION
+ * 
+ * Local Development: Usually requires no SSL.
+ * Render Production: Requires SSL ({ rejectUnauthorized: false }).
+ * 
+ * Priority: 
+ * 1. DATABASE_URL (Standard for Render/Heroku)
+ * 2. Individual DB_* variables (Fallback/Local)
+ */
 
-if (missingVars.length > 0) {
-  console.error('❌ FATAL: Missing required environment variables:', missingVars.join(', '));
-  console.error('');
-  console.error('For LOCAL DEVELOPMENT: Create server/.env with:');
-  console.error('  DB_HOST=localhost');
-  console.error('  DB_PORT=5432');
-  console.error('  DB_USER=postgres');
-  console.error('  DB_PASSWORD=your_local_password');
-  console.error('  DB_NAME=ecommerce');
-  console.error('');
-  console.error('For RENDER PRODUCTION: Set these in Render Dashboard → Settings → Environment:');
-  console.error('  DB_HOST=dpg-XXXXX.render.com (from Render → Databases → Connections)');
-  console.error('  DB_PORT=5432');
-  console.error('  DB_USER=postgres (from Render database)');
-  console.error('  DB_PASSWORD=your_render_password (from Render database)');
-  console.error('  DB_NAME=your_database_name (from Render database)');
-  console.error('');
-  process.exit(1);
-}
+const isLocal = 
+  process.env.DB_HOST === 'localhost' || 
+  process.env.DB_HOST === '127.0.0.1' || 
+  (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('localhost'));
 
-// Detect environment
-const isProduction = process.env.NODE_ENV === 'production' || process.env.DB_HOST?.includes('render.com') || process.env.DB_HOST?.startsWith('dpg-');
+const sslConfig = isLocal ? false : { rejectUnauthorized: false };
 
-// Build connection config
-const poolConfig = {
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT || 5432,
-};
+let poolConfig;
 
-// Add SSL configuration for Render (production)
-if (isProduction) {
-  poolConfig.ssl = {
-    rejectUnauthorized: false,
+if (process.env.DATABASE_URL) {
+  poolConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: sslConfig,
   };
-  console.log('🔒 SSL/TLS enabled for PostgreSQL connection (Render)');
 } else {
-  console.log('🔓 SSL/TLS disabled (Local Development)');
+  poolConfig = {
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: parseInt(process.env.DB_PORT || '5432'),
+    ssl: sslConfig,
+  };
 }
 
 const pool = new Pool(poolConfig);
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+  console.error('❌ Unexpected error on idle PostgreSQL client:', err.message);
 });
 
 pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL database');
+  const host = poolConfig.host || 'Remote/DATABASE_URL';
+  const mode = isLocal ? 'LOCAL' : 'PRODUCTION/SSL';
+  console.log(`✅ Connected to PostgreSQL [${mode}] on ${host}`);
 });
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
   getClient: () => pool.connect(),
+  pool,
 };
+

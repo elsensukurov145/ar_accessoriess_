@@ -13,7 +13,7 @@ function normalizeProduct(raw) {
 
 exports.getAllProducts = async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM products ORDER BY created_at DESC');
+    const result = await db.query('SELECT * FROM products ORDER BY id DESC');
     const products = result.rows.map(normalizeProduct);
     res.json({ success: true, products });
   } catch (error) {
@@ -127,25 +127,25 @@ exports.updateProduct = async (req, res) => {
       stock: stock !== undefined ? Number(stock) : existing.rows[0].stock,
     };
 
-    const query = `UPDATE products SET name=$1, description=$2, price=$3, discount_price=$4, category=$5, image_url=$6, colors=$7, in_stock=$8, specs=$9, status=$10${stock !== undefined || existing.rows[0].stock !== undefined ? ', stock=$11' : ''} WHERE id=$12 RETURNING *`;
+    const updateFields = [
+      'name=$1', 'description=$2', 'price=$3', 'discount_price=$4', 
+      'category=$5', 'image_url=$6', 'colors=$7', 'in_stock=$8', 
+      'specs=$9', 'status=$10'
+    ];
     const params = [
-      data.name,
-      data.description,
-      data.price,
-      data.discount_price,
-      data.category,
-      data.image_url,
-      data.colors,
-      data.in_stock,
-      data.specs,
-      data.status,
+      data.name, data.description, data.price, data.discount_price,
+      data.category, data.image_url, data.colors, data.in_stock,
+      data.specs, data.status
     ];
 
-    if (data.stock !== undefined) {
-      params.push(data.stock);
+    if (stock !== undefined) {
+      updateFields.push('stock=$11');
+      params.push(Number(stock));
     }
 
     params.push(id);
+    const idParamIndex = params.length;
+    const query = `UPDATE products SET ${updateFields.join(', ')} WHERE id=$${idParamIndex} RETURNING *`;
 
     const result = await db.query(query, params);
 
