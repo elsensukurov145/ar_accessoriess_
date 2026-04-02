@@ -17,8 +17,17 @@ exports.getAllProducts = async (req, res) => {
     const products = result.rows.map(normalizeProduct);
     res.json({ success: true, products });
   } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error('❌ Error fetching products:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      timestamp: new Date().toISOString(),
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server Error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -31,8 +40,17 @@ exports.getProductById = async (req, res) => {
     }
     res.json({ success: true, product: normalizeProduct(result.rows[0]) });
   } catch (error) {
-    console.error('Error fetching product:', error);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error('❌ Error fetching product:', {
+      id: req.params.id,
+      message: error.message,
+      code: error.code,
+      timestamp: new Date().toISOString(),
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server Error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -68,8 +86,18 @@ exports.createProduct = async (req, res) => {
 
     res.status(201).json({ success: true, product: normalizeProduct(result.rows[0]) });
   } catch (error) {
-    console.error('Error creating product:', error);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error('❌ Error creating product:', {
+      id: req.body.id,
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      timestamp: new Date().toISOString(),
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server Error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -123,8 +151,18 @@ exports.updateProduct = async (req, res) => {
 
     res.json({ success: true, product: normalizeProduct(result.rows[0]) });
   } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error('❌ Error updating product:', {
+      id: req.params.id,
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      timestamp: new Date().toISOString(),
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server Error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
@@ -137,7 +175,16 @@ exports.deleteProduct = async (req, res) => {
     }
     res.json({ success: true, message: 'Product deleted' });
   } catch (error) {
-    console.error('Error deleting product:', error);
-    res.status(500).json({ success: false, message: 'Server Error' });
+    console.error('❌ Error deleting product:', {
+      id: req.params.id,
+      message: error.message,
+      code: error.code,
+      timestamp: new Date().toISOString(),
+    });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server Error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
