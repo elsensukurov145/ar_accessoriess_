@@ -12,15 +12,15 @@ if (missingVars.length > 0) {
   console.error('  DB_HOST=localhost');
   console.error('  DB_PORT=5432');
   console.error('  DB_USER=postgres');
-  console.error('  DB_PASSWORD=your_password');
+  console.error('  DB_PASSWORD=your_local_password');
   console.error('  DB_NAME=ecommerce');
   console.error('');
   console.error('For RENDER PRODUCTION: Set these in Render Dashboard → Settings → Environment:');
-  console.error('  DB_HOST=dpg-XXXXX.render.com (from Render database)');
+  console.error('  DB_HOST=dpg-XXXXX.render.com (from Render → Databases → Connections)');
   console.error('  DB_PORT=5432');
   console.error('  DB_USER=postgres (from Render database)');
-  console.error('  DB_PASSWORD=your_password (from Render database)');
-  console.error('  DB_NAME=your_db_name (from Render database)');
+  console.error('  DB_PASSWORD=your_render_password (from Render database)');
+  console.error('  DB_NAME=your_database_name (from Render database)');
   console.error('');
   process.exit(1);
 }
